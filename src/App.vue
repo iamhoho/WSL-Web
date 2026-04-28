@@ -15,6 +15,7 @@ import LayoutSidebar from './components/Layout/Sidebar.vue';
 .app {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 .main-content {
   flex: 1;
