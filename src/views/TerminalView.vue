@@ -48,7 +48,7 @@ function connect() {
     terminal.write('\r\n\x1b[36m[连接成功] 正在启动 bash...\x1b[0m\r\n');
     socket.emit('terminal:start', {
       shell: '/bin/bash',
-      cwd: process.env.HOME || '/home',
+      cwd: '/home/dangyeuihou',
     });
   });
 

@@ -1,23 +1,22 @@
 import nodePty from 'node-pty';
 import os from 'os';
-import fs from 'fs';
 
 const sessions = new Map();
 
 export function handleTerminalConnection(io, socket) {
-  console.log(`[Terminal] Client connected: ${socket.id}`);
+  console.log(`[Terminal] Client connected: ${socket.id}, transport: ${socket.conn.transport.name}`);
 
   socket.on('terminal:start', ({ shell, cwd } = {}) => {
-    console.log(`[Terminal] Starting terminal for ${socket.id}`, { shell, cwd });
+    console.log(`[Terminal] Received terminal:start from ${socket.id}`, { shell, cwd });
 
     const homeDir = os.homedir();
-    const defaultShell = shell || process.env.SHELL || '/bin/bash';
+    const defaultShell = shell || '/bin/bash';
     const defaultCwd = cwd || homeDir;
 
-    console.log(`[Terminal] Spawning shell: ${defaultShell} in ${defaultCwd}`);
+    console.log(`[Terminal] Spawning: ${defaultShell} with args [] in ${defaultCwd}`);
 
     try {
-      const pty = nodePty.spawn(defaultShell, ['-l'], {
+      const pty = nodePty.spawn(defaultShell, [], {
         name: 'xterm-256color',
         cols: 80,
         rows: 24,
@@ -28,6 +27,7 @@ export function handleTerminalConnection(io, socket) {
       sessions.set(socket.id, { pty });
 
       pty.onData((data) => {
+        console.log(`[Terminal] PTY data to ${socket.id}:`, data.substring(0, 50));
         socket.emit('terminal:data', { data });
       });
 
@@ -37,7 +37,7 @@ export function handleTerminalConnection(io, socket) {
         sessions.delete(socket.id);
       });
 
-      console.log(`[Terminal] PTY spawned successfully for ${socket.id}`);
+      console.log(`[Terminal] PTY spawned successfully for ${socket.id}, pid: ${pty.pid}`);
     } catch (error) {
       console.error(`[Terminal] Failed to spawn PTY for ${socket.id}:`, error);
       socket.emit('terminal:error', { error: error.message });
@@ -58,8 +58,8 @@ export function handleTerminalConnection(io, socket) {
     }
   });
 
-  socket.on('disconnect', () => {
-    console.log(`[Terminal] Client disconnected: ${socket.id}`);
+  socket.on('disconnect', (reason) => {
+    console.log(`[Terminal] Client disconnected: ${socket.id}, reason: ${reason}`);
     const session = sessions.get(socket.id);
     if (session) {
       session.pty.kill();
