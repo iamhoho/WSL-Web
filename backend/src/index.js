@@ -21,6 +21,10 @@ app.use('/api/files', filesRouter);
 app.use('/api/github', githubRouter);
 app.use('/api/auth', authRouter);
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });

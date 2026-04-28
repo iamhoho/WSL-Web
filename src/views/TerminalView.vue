@@ -45,7 +45,7 @@ function connect() {
   socket.on('connect', () => {
     isConnected.value = true;
     isReconnecting.value = false;
-    terminal.write('\r\n\x1b[32m[已连接] 正在启动 bash...\x1b[0m\r\n');
+    terminal.write('\r\n\x1b[36m[连接成功] 正在启动 bash...\x1b[0m\r\n');
     socket.emit('terminal:start', {
       shell: '/bin/bash',
       cwd: process.env.HOME || '/home',
@@ -69,6 +69,10 @@ function connect() {
     }
   });
 
+  socket.on('terminal:error', ({ error }) => {
+    terminal.write(`\r\n\x1b[31m[错误] ${error}\x1b[0m\r\n`);
+  });
+
   socket.connect();
 }
 
@@ -76,6 +80,7 @@ function reconnect() {
   isReconnecting.value = true;
   if (terminal) {
     terminal.clear();
+    terminal.write('\x1b[36m正在重连...\x1b[0m\r\n');
   }
   connect();
 }
@@ -118,12 +123,9 @@ onMounted(() => {
   fitAddon.fit();
 
   terminal.write('\x1b[36mWSL Terminal\x1b[0m\r\n');
-  terminal.write('按任意键开始连接...\r\n');
+  terminal.write('正在连接服务器...\r\n');
 
-  const connectionListener = terminal.onData(() => {
-    terminal.offData(connectionListener);
-    connect();
-  });
+  connect();
 
   terminal.onResize(({ cols, rows }) => {
     if (socket?.connected) {
