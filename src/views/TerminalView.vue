@@ -127,6 +127,12 @@ onMounted(() => {
 
   connect();
 
+  terminal.onData((data) => {
+    if (socket?.connected) {
+      socket.emit('terminal:input', { data });
+    }
+  });
+
   terminal.onResize(({ cols, rows }) => {
     if (socket?.connected) {
       socket.emit('terminal:resize', { cols, rows });
